@@ -6,13 +6,13 @@ import sys
 import time
 from pathlib import Path
 
-from .comments import fetch_comments
-from .config import AppConfig, generate_run_id, load_config
-from .io_streams import append_jsonl, append_jsonl_many
-from .listings import iter_hot, iter_top
-from .normalizers import normalize_comment, normalize_post
-from .ratelimit import RateLimiter, compute_backoff_seconds
-from .telemetry import Stopwatch, TelemetryRecorder
+from reddit_researcher.api.comments import fetch_comments
+from reddit_researcher.api.listings import iter_hot, iter_top
+from reddit_researcher.config.config import AppConfig, generate_run_id, load_config
+from reddit_researcher.core.ratelimit import RateLimiter, compute_backoff_seconds
+from reddit_researcher.core.telemetry import Stopwatch, TelemetryRecorder
+from reddit_researcher.io.io_streams import append_jsonl, append_jsonl_many
+from reddit_researcher.io.normalizers import normalize_comment, normalize_post
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -37,7 +37,7 @@ def main(argv: list[str] | None = None) -> int:
     started_at = time.time()
 
     # Build client lazily inside helpers
-    from .reddit_client import make_reddit
+    from reddit_researcher.api.reddit_client import make_reddit
     reddit = make_reddit(cfg)
 
     # Fetch posts

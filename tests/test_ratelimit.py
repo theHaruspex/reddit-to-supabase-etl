@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from reddit_researcher.ratelimit import (
+from reddit_researcher.core.ratelimit import (
     BackoffConfig,
     RateLimiter,
     compute_backoff_seconds,

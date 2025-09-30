@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 
-from reddit_researcher.telemetry import (
+from reddit_researcher.core.telemetry import (
     Stopwatch,
     TelemetryRecorder,
     parse_ratelimit_headers,

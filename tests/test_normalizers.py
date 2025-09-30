@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from reddit_researcher.normalizers import normalize_comment, normalize_post
+from reddit_researcher.io.normalizers import normalize_comment, normalize_post
 
 
 def test_normalize_post_basic() -> None:

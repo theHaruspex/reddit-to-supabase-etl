@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from reddit_researcher.cli import main
+from reddit_researcher.cli.cli import main
 
 
 def test_main_prints_hello(capsys) -> None:

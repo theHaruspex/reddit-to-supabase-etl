@@ -8,8 +8,8 @@ readme = "README.md"
 dependencies = ["praw", "python-dotenv", "tqdm", "pyyaml"]
 
 [project.scripts]
-reddit-researcher = "reddit_researcher.cli:main"
-reddit-probe = "reddit_researcher.probe:main"
+reddit-researcher = "reddit_researcher.cli.cli:main"
+reddit-probe = "reddit_researcher.core.probe:main"
 
 [tool.pytest.ini_options]
 addopts = "-q"

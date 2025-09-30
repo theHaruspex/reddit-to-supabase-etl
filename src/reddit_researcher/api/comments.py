@@ -4,7 +4,7 @@ from typing import Any
 
 import praw
 
-from .ratelimit import RateLimiter
+from reddit_researcher.core.ratelimit import RateLimiter
 
 
 def fetch_comments(

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from reddit_researcher.config import AppConfig, ProbeConfig, RedditConfig
-from reddit_researcher.reddit_client import make_reddit, make_user_agent
+from reddit_researcher.api.reddit_client import make_reddit, make_user_agent
+from reddit_researcher.config.config import AppConfig, ProbeConfig, RedditConfig
 
 
 def test_make_user_agent_fallback() -> None:
