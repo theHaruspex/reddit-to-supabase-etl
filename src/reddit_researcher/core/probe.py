@@ -69,6 +69,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Expand comments with basic retry/backoff
     rng = random.Random()
+    comments_per_post: list[int] = []
     for s in sample:
         attempts = 0
         while True:
@@ -85,6 +86,7 @@ def main(argv: list[str] | None = None) -> int:
                     headers={},
                     elapsed_s=sw.elapsed,
                 )
+                comments_per_post.append(len(comments))
                 append_jsonl_many(
                     out_comments,
                     (normalize_comment(c, link_id=getattr(s, "id", None)) for c in comments),
@@ -105,6 +107,24 @@ def main(argv: list[str] | None = None) -> int:
             for _ in f:
                 comments_total += 1
 
+    # Compute simple per-post stats for expanded posts
+    def _percentile(sorted_vals: list[int], pct: float) -> int:
+        if not sorted_vals:
+            return 0
+        k = max(0, min(len(sorted_vals) - 1, int(round((pct / 100.0) * (len(sorted_vals) - 1)))))
+        return sorted_vals[k]
+
+    cps_sorted = sorted(comments_per_post)
+    per_post_stats = {
+        "min": cps_sorted[0] if cps_sorted else 0,
+        "p50": _percentile(cps_sorted, 50),
+        "p95": _percentile(cps_sorted, 95),
+        "max": cps_sorted[-1] if cps_sorted else 0,
+    }
+
+    elapsed_sec = max(0.0, ended_at - started_at)
+    telem_summary = telem.summary()
+    ratelimit_windows = int(telem_summary.get("ratelimit_windows", 0))
     metrics = {
         "run_id": run_id,
         "config": {
@@ -119,19 +139,39 @@ def main(argv: list[str] | None = None) -> int:
         "timing": {
             "started_at": started_at,
             "ended_at": ended_at,
-            "elapsed_sec": max(0.0, ended_at - started_at),
+            "elapsed_sec": elapsed_sec,
         },
-        "telemetry": telem.summary(),
+        "telemetry": telem_summary,
         "posts_count": len(posts),
         "comments_total": comments_total,
+        "comments_per_expanded_post": per_post_stats,
     }
 
     Path(out_metrics).write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     report_lines = [
         f"# Reddit Probe — r/{cfg.probe.subreddit} ({cfg.probe.listing}) — {run_id}",
         "",
-        f"posts fetched: {len(posts)}",
-        f"comments written: {comments_total}",
+        "**Config**",
+        (
+            f"- posts: {cfg.probe.post_limit}, comment_sample: {cfg.probe.comment_sample}, "
+            f"replace_more_limit: {cfg.probe.comment_replace_more_limit}"
+        ),
+        f"- qpm_cap: {cfg.probe.qpm_cap}, raw_json: {cfg.probe.raw_json}",
+        "",
+        "**Timing**",
+        f"- started: {started_at:.0f}, ended: {ended_at:.0f}, elapsed: {elapsed_sec:.2f}s",
+        "",
+        "## Requests & Rate Limits",
+        f"- ratelimit windows observed: {ratelimit_windows}",
+        "",
+        "## Data Volume",
+        f"- posts fetched: {len(posts)}",
+        f"- comments fetched (sample {cfg.probe.comment_sample}): {comments_total}",
+        (
+            "- comments per expanded post: "
+            f"min {per_post_stats['min']}, p50 {per_post_stats['p50']}, "
+            f"p95 {per_post_stats['p95']}, max {per_post_stats['max']}"
+        ),
     ]
     report_path.write_text("\n".join(report_lines), encoding="utf-8")
 
