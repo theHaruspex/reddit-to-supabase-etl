@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import praw
+from typing import Any
 
-from .config import AppConfig, RedditConfig
+import praw
 
 
 def make_user_agent(base_agent: str) -> str:
@@ -11,11 +11,10 @@ def make_user_agent(base_agent: str) -> str:
     return ua
 
 
-def make_reddit(cfg: AppConfig | RedditConfig) -> praw.Reddit:
-    if isinstance(cfg, AppConfig):
-        rcfg = cfg.reddit
-    else:
-        rcfg = cfg
+def make_reddit(cfg: Any) -> praw.Reddit:
+    # Accept either an AppConfig-like object with a `reddit` attribute
+    # or a RedditConfig-like object directly.
+    rcfg = getattr(cfg, "reddit", cfg)
 
     reddit = praw.Reddit(
         client_id=rcfg.client_id,
