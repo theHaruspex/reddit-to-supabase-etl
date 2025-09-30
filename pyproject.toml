@@ -5,7 +5,7 @@ description = "CLI tools for researching Reddit data"
 authors = [{name = "Derious Vaughn"}]
 requires-python = ">=3.12"
 readme = "README.md"
-dependencies = []
+dependencies = ["praw", "python-dotenv", "tqdm"]
 
 [project.scripts]
 reddit-researcher = "reddit_researcher.cli:main"

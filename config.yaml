@@ -1,0 +1,18 @@
+# config.yaml
+reddit:
+  client_id: 
+  client_secret: 
+  user_agent: theHaruspex:reddit-probe:v0.1 (by u/yourusername)
+
+probe:
+  subreddit: "all"
+  listing: "hot"
+  time_filter: "day"
+  post_limit: 100
+  comment_sample: 10
+  comment_replace_more_limit: 5
+  qpm_cap: 90
+  max_runtime_sec: 600
+  raw_json: 1
+  out_dir: "./data"
+  reports_dir: "./reports"
