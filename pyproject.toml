@@ -5,10 +5,11 @@ description = "CLI tools for researching Reddit data"
 authors = [{name = "Derious Vaughn"}]
 requires-python = ">=3.12"
 readme = "README.md"
-dependencies = ["praw", "python-dotenv", "tqdm"]
+dependencies = ["praw", "python-dotenv", "tqdm", "pyyaml"]
 
 [project.scripts]
 reddit-researcher = "reddit_researcher.cli:main"
+reddit-probe = "reddit_researcher.probe:main"
 
 [tool.pytest.ini_options]
 addopts = "-q"
