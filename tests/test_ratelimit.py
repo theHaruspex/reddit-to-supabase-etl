@@ -52,3 +52,27 @@ def test_compute_backoff_grows_and_jitters() -> None:
     assert compute_backoff_seconds(4, cfg=cfg) == 8.0
 
 
+def test_rate_limiter_flood_total_sleep() -> None:
+    # 60 qpm => 1 token/sec. Burst allows one immediate call; the rest should sleep ~1s each.
+    now = [0.0]
+
+    def time_fn() -> float:
+        return now[0]
+
+    slept = []
+
+    def sleep_fn(s: float) -> None:
+        slept.append(s)
+        now[0] += s
+
+    rl = RateLimiter(60, burst_tokens=1, time_fn=time_fn, sleep_fn=sleep_fn)
+
+    num_calls = 5
+    for _ in range(num_calls):
+        rl.acquire()
+
+    # First call immediate; remaining 4 should sum to ~4 seconds
+    total_sleep = sum(slept)
+    assert 3.8 <= total_sleep <= 4.2
+
+
