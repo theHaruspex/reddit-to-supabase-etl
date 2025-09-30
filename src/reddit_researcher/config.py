@@ -66,8 +66,12 @@ def load_config(config_path: str | Path = "config.yaml") -> AppConfig:
     probe_raw = raw.get("probe", {})
 
     reddit_cfg = RedditConfig(
-        client_id=str(reddit_raw.get("client_id", "")).strip(),
-        client_secret=str(reddit_raw.get("client_secret", "")).strip(),
+        client_id=str(
+            reddit_raw.get("client_id") or os.getenv("REDDIT_CLIENT_ID", "")
+        ).strip(),
+        client_secret=str(
+            reddit_raw.get("client_secret") or os.getenv("REDDIT_CLIENT_SECRET", "")
+        ).strip(),
         user_agent=str(
             reddit_raw.get(
                 "user_agent",

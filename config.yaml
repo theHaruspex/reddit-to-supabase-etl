@@ -2,7 +2,7 @@
 reddit:
   client_id: 
   client_secret: 
-  user_agent: theHaruspex:reddit-probe:v0.1 (by u/yourusername)
+  user_agent: ExpressWrangler4615:reddit-probe:v0.1 (by u/ExpressWrangler4615)
 
 probe:
   subreddit: "all"
