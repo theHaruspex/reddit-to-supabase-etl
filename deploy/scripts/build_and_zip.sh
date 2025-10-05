@@ -12,8 +12,11 @@ echo "[build] installing python deps into build/python"
 python3 -m venv "$BUILD_DIR/.venv"
 source "$BUILD_DIR/.venv/bin/activate"
 python -m pip install --upgrade pip >/dev/null
-# leverage pyproject; capture runtime deps only
-python - <<'PY'
+if [[ -f "$ROOT_DIR/requirements.txt" ]]; then
+  python -m pip install -r "$ROOT_DIR/requirements.txt" -t "$BUILD_DIR/python"
+else
+  echo "[build] requirements.txt not found; using pyproject deps fallback"
+  python - <<'PY'
 import json, subprocess
 from pathlib import Path
 py = Path('pyproject.toml').read_text()
@@ -29,6 +32,7 @@ if start != -1 and end != -1:
 if deps:
     subprocess.check_call(["python","-m","pip","install","-t","build/python",*deps])
 PY
+fi
 
 echo "[build] copying project package"
 mkdir -p "$BUILD_DIR/reddit_researcher"
