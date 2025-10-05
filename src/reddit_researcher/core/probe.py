@@ -13,7 +13,7 @@ from reddit_researcher.apis.supabase.adapter import SupabaseSinkAdapter
 from reddit_researcher.config.config import AppConfig, generate_run_id, load_config
 from reddit_researcher.core.ratelimit import RateLimiter, compute_backoff_seconds
 from reddit_researcher.core.telemetry import Stopwatch, TelemetryRecorder
-from reddit_researcher.io.normalizers import normalize_comment, normalize_post
+from reddit_researcher.core.normalizers import normalize_comment, normalize_post
 
 
 def main(argv: list[str] | None = None) -> int:

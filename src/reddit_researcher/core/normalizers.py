@@ -53,5 +53,3 @@ def normalize_comment(comment: Any, link_id: str | None = None) -> dict[str, Any
         "depth": getattr(comment, "depth", None),
         "retrieved_at": _ts_to_iso(datetime.now(tz=UTC).timestamp()),
     }
-
-

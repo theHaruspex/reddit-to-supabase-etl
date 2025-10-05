@@ -43,7 +43,6 @@ ruff check . && mypy src && pytest -q
   - [apis/reddit](src/reddit_researcher/apis/reddit/README.md)
   - [apis/supabase](src/reddit_researcher/apis/supabase/README.md)
   - [core](src/reddit_researcher/core/README.md)
-  - [io](src/reddit_researcher/io/README.md)
   - [config](src/reddit_researcher/config/README.md)
   - [cli](src/reddit_researcher/cli/README.md)
 - Database schema
