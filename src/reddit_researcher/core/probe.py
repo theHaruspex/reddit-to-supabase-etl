@@ -6,8 +6,8 @@ import sys
 import time
 from pathlib import Path
 
-from reddit_researcher.api.comments import fetch_comments
-from reddit_researcher.api.listings import iter_hot, iter_top
+from reddit_researcher.apis.reddit.adapter import RedditSourceAdapter
+from reddit_researcher.apis.supabase.adapter import SupabaseSinkAdapter
 from reddit_researcher.config.config import AppConfig, generate_run_id, load_config
 from reddit_researcher.core.ratelimit import RateLimiter, compute_backoff_seconds
 from reddit_researcher.core.telemetry import Stopwatch, TelemetryRecorder
@@ -36,26 +36,16 @@ def main(argv: list[str] | None = None) -> int:
     telem = TelemetryRecorder()
     started_at = time.time()
 
-    # Build client lazily inside helpers
-    from reddit_researcher.api.reddit_client import make_reddit
-    reddit = make_reddit(cfg)
+    # Build adapters
+    source = RedditSourceAdapter(cfg)
 
     # Fetch posts
-    if cfg.probe.listing == "hot":
-        posts_iter = iter_hot(
-            reddit=reddit,
-            subreddit=cfg.probe.subreddit,
-            limit=cfg.probe.post_limit,
-            raw_json=cfg.probe.raw_json,
-        )
-    else:
-        posts_iter = iter_top(
-            reddit=reddit,
-            subreddit=cfg.probe.subreddit,
-            time_filter=cfg.probe.time_filter,
-            limit=cfg.probe.post_limit,
-            raw_json=cfg.probe.raw_json,
-        )
+    posts_iter = source.iter_posts(
+        subreddit=cfg.probe.subreddit,
+        listing=cfg.probe.listing,
+        time_filter=cfg.probe.time_filter,
+        limit=cfg.probe.post_limit,
+    )
 
     posts = []
     for s in posts_iter:
@@ -75,11 +65,9 @@ def main(argv: list[str] | None = None) -> int:
         while True:
             try:
                 with Stopwatch() as sw:
-                    comments = fetch_comments(
-                        reddit=reddit,
+                    comments = source.fetch_comments(
                         submission_id=getattr(s, "id", ""),
                         replace_more_limit=cfg.probe.comment_replace_more_limit,
-                        limiter=limiter,
                     )
                 telem.record(
                     endpoint="comments.fetch",
@@ -174,6 +162,27 @@ def main(argv: list[str] | None = None) -> int:
         ),
     ]
     report_path.write_text("\n".join(report_lines), encoding="utf-8")
+
+    # Optional Supabase sink
+    if cfg.supabase.enabled and cfg.supabase.url and cfg.supabase.key:
+        sink = SupabaseSinkAdapter(cfg)
+        run_row = {
+            "run_id": run_id,
+            "started_at": started_at,
+            "ended_at": ended_at,
+            "elapsed_sec": elapsed_sec,
+            "subreddit": cfg.probe.subreddit,
+            "listing": cfg.probe.listing,
+            "post_limit": cfg.probe.post_limit,
+            "comment_sample": cfg.probe.comment_sample,
+            "replace_more_limit": cfg.probe.comment_replace_more_limit,
+            "qpm_cap": cfg.probe.qpm_cap,
+            "raw_json": cfg.probe.raw_json,
+            "posts_count": len(posts),
+            "comments_total": comments_total,
+        }
+        sink.upsert_run(run_row)
+        # For simplicity, only upsert run here now; posts/comments can be streamed in later.
 
     print(json.dumps({"run_id": run_id, "posts": len(posts), "comments": comments_total}))
     return 0

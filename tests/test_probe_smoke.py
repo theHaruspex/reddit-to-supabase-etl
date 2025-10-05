@@ -8,8 +8,8 @@ from unittest.mock import patch
 from reddit_researcher.core.probe import main
 
 
-@patch("reddit_researcher.core.probe.fetch_comments")
-@patch("reddit_researcher.core.probe.iter_hot")
+@patch("reddit_researcher.apis.reddit.adapter.RedditSourceAdapter.fetch_comments")
+@patch("reddit_researcher.apis.reddit.adapter.RedditSourceAdapter.iter_posts")
 @patch("reddit_researcher.core.probe.load_config")
 def test_probe_smoke(mock_load_cfg, mock_iter_hot, mock_fetch_comments, tmp_path) -> None:
     cfg = SimpleNamespace(
@@ -27,6 +27,7 @@ def test_probe_smoke(mock_load_cfg, mock_iter_hot, mock_fetch_comments, tmp_path
             out_dir=str(tmp_path / "data"),
             reports_dir=str(tmp_path / "reports"),
         ),
+        supabase=SimpleNamespace(enabled=False, url="", key="", schema="public"),
     )
     mock_load_cfg.return_value = cfg
 

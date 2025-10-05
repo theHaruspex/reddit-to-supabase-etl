@@ -16,3 +16,9 @@ probe:
   raw_json: 1
   out_dir: "./data"
   reports_dir: "./reports"
+
+supabase:
+  enabled: 0
+  url: ${SUPABASE_URL}
+  key: ${SUPABASE_KEY}
+  schema: "public"

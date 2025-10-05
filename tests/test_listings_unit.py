@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from reddit_researcher.api.listings import iter_hot, iter_top
+from reddit_researcher.apis.reddit.listings import iter_hot, iter_top
 
 
 def test_iter_hot_calls_praw() -> None:

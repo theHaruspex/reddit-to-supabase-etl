@@ -34,9 +34,18 @@ class ProbeConfig:
 
 
 @dataclass(frozen=True)
+class SupabaseConfig:
+    enabled: bool = False
+    url: str = ""
+    key: str = ""
+    schema: str = "public"
+
+
+@dataclass(frozen=True)
 class AppConfig:
     reddit: RedditConfig
     probe: ProbeConfig
+    supabase: SupabaseConfig = SupabaseConfig()
 
 
 def _expand_env(value: Any) -> Any:
@@ -64,6 +73,7 @@ def load_config(config_path: str | Path = "config.yaml") -> AppConfig:
 
     reddit_raw = raw.get("reddit", {})
     probe_raw = raw.get("probe", {})
+    supabase_raw = raw.get("supabase", {})
 
     reddit_cfg = RedditConfig(
         client_id=str(
@@ -103,11 +113,18 @@ def load_config(config_path: str | Path = "config.yaml") -> AppConfig:
         reports_dir=str(probe_raw.get("reports_dir", ProbeConfig.reports_dir)),
     )
 
+    supabase_cfg = SupabaseConfig(
+        enabled=bool(supabase_raw.get("enabled", False)),
+        url=str(supabase_raw.get("url") or os.getenv("SUPABASE_URL", "")).strip(),
+        key=str(supabase_raw.get("key") or os.getenv("SUPABASE_KEY", "")).strip(),
+        schema=str(supabase_raw.get("schema", "public")),
+    )
+
     # Ensure output dirs exist
     Path(probe_cfg.out_dir).mkdir(parents=True, exist_ok=True)
     Path(probe_cfg.reports_dir).mkdir(parents=True, exist_ok=True)
 
-    return AppConfig(reddit=reddit_cfg, probe=probe_cfg)
+    return AppConfig(reddit=reddit_cfg, probe=probe_cfg, supabase=supabase_cfg)
 
 
 def generate_run_id() -> str:

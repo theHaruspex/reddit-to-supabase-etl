@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-import os
 from pathlib import Path
 
 # CONFIGURATION
 CONFIG = {
     "exclude_paths": [
-        "node_modules", "dist", ".git", "__pycache__", "prompts", ".idea", ".vscode", "logs", "tmp", "project-reporter",
-        "data", "reports", ".venv", ".pytest_cache", ".ruff_cache", ".mypy_cache", "htmlcov", ".dist", "build", "egg-info",
+        # tooling and caches
+        "node_modules", "dist", ".git", "__pycache__", "prompts", ".idea", ".vscode",
+        "logs", "tmp", "project-reporter",
+        # project outputs and build artifacts
+        "data", "reports", ".venv", ".pytest_cache", ".ruff_cache",
+        ".mypy_cache", "htmlcov", ".dist", "build", "egg-info",
     ],
     "exclude_extensions": [
-        ".pyc", ".log", ".DS_Store", ".env", ".example", ".json", ".jsonl", ".ndjson",
+        ".pyc", ".log", ".DS_Store", ".env", ".example", ".json", ".jsonl", ".ndjson"
     ],
     "exclude_files": [
         "package-lock.json", ".env", ".gitignore", "file_contents_report.txt",
