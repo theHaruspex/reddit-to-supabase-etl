@@ -3,7 +3,6 @@
 Local IO and format utilities.
 
 ## Responsibilities
-- Write newline-delimited JSON (`*.jsonl`) for posts and comments.
 - Normalize PRAW models to stable dicts that match DB columns.
 
 ## Modules
@@ -14,8 +13,4 @@ Local IO and format utilities.
   - `normalize_post(submission)`
   - `normalize_comment(comment, link_id=None)`
 
-## Data contracts
-- `posts_YYYYMMDD_HHMM.jsonl`: one normalized post per line.
-- `comments_YYYYMMDD_HHMM.jsonl`: one normalized comment per line.
-
-These shapes align with the Supabase tables described in `schema/README.md`.
+This module no longer writes local files. Shapes align with Supabase tables described in `schema/README.md`.

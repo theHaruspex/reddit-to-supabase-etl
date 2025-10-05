@@ -24,8 +24,6 @@ def test_probe_smoke(mock_load_cfg, mock_iter_hot, mock_fetch_comments, tmp_path
             qpm_cap=100,
             max_runtime_sec=60,
             raw_json=1,
-            out_dir=str(tmp_path / "data"),
-            reports_dir=str(tmp_path / "reports"),
         ),
         supabase=SimpleNamespace(enabled=False, url="", key="", schema="public"),
     )
@@ -52,15 +50,6 @@ def test_probe_smoke(mock_load_cfg, mock_iter_hot, mock_fetch_comments, tmp_path
 
     assert main([]) == 0
 
-    # Verify outputs
-    out_dir = Path(cfg.probe.out_dir)
-    posts_files = list(out_dir.glob("posts_*.jsonl"))
-    comments_files = list(out_dir.glob("comments_*.jsonl"))
-    metrics_files = list(out_dir.glob("run_metrics_*.json"))
-    assert posts_files and comments_files and metrics_files
-
-    data = json.loads(metrics_files[0].read_text())
-    assert data["posts_count"] == 2
-    assert data["comments_total"] >= 1
+    # Verify core result printed JSON summary via return code; no local files expected
 
 

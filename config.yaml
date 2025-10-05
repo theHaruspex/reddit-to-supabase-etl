@@ -14,8 +14,6 @@ probe:
   qpm_cap: 90
   max_runtime_sec: 600
   raw_json: 1
-  out_dir: "./data"
-  reports_dir: "./reports"
 
 supabase:
   enabled: 1

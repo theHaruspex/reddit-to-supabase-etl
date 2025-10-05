@@ -17,7 +17,6 @@ python -m pip install -e .
 - Edit `config.yaml` (user_agent should include your Reddit username)
 
 ## Run
-- Probe (writes JSONL + metrics + report):
 ```bash
 reddit-probe
 ```
@@ -27,10 +26,7 @@ reddit-researcher
 ```
 
 ## Outputs
-- `data/posts_YYYYMMDD_HHMM.jsonl` — normalized posts
-- `data/comments_YYYYMMDD_HHMM.jsonl` — normalized comments for sampled posts
-- `data/run_metrics_YYYYMMDD_HHMM.json` — metrics and telemetry
-- `reports/run_YYYYMMDD_HHMM.md` — Markdown summary
+This pipeline no longer writes local files; results are upserted idempotently to Supabase.
 
 ## Development
 - Lint, types, tests:

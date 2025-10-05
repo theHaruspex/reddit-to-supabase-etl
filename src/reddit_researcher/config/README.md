@@ -7,7 +7,7 @@ Load and validate configuration from `.env` and `config.yaml`.
 - Expands `${ENV_VAR}` placeholders in YAML.
 - Produces `AppConfig` with sections:
   - `reddit`: `client_id`, `client_secret`, `user_agent`
-  - `probe`: `subreddit`, `listing`, `post_limit`, `comment_sample`, `replace_more_limit`, `qpm_cap`, `raw_json`, `out_dir`, `reports_dir`
+- `probe`: `subreddit`, `listing`, `post_limit`, `comment_sample`, `replace_more_limit`, `qpm_cap`, `raw_json`
   - `supabase`: `enabled`, `url`, `key`, `schema`
 
 ## Environment keys

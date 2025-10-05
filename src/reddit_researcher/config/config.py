@@ -29,8 +29,6 @@ class ProbeConfig:
     qpm_cap: int = 90
     max_runtime_sec: int = 600
     raw_json: int = 1
-    out_dir: str = "./data"
-    reports_dir: str = "./reports"
 
 
 @dataclass(frozen=True)
@@ -109,8 +107,6 @@ def load_config(config_path: str | Path = "config.yaml") -> AppConfig:
             probe_raw.get("max_runtime_sec", ProbeConfig.max_runtime_sec)
         ),
         raw_json=int(probe_raw.get("raw_json", ProbeConfig.raw_json)),
-        out_dir=str(probe_raw.get("out_dir", ProbeConfig.out_dir)),
-        reports_dir=str(probe_raw.get("reports_dir", ProbeConfig.reports_dir)),
     )
 
     supabase_cfg = SupabaseConfig(
@@ -119,11 +115,6 @@ def load_config(config_path: str | Path = "config.yaml") -> AppConfig:
         key=str(supabase_raw.get("key") or os.getenv("SUPABASE_KEY", "")).strip(),
         schema=str(supabase_raw.get("schema", "public")),
     )
-
-    # Optionally create local output dirs (disabled by default for AWS Lambda)
-    if os.getenv("ENABLE_LOCAL_OUTPUTS") == "1":
-        Path(probe_cfg.out_dir).mkdir(parents=True, exist_ok=True)
-        Path(probe_cfg.reports_dir).mkdir(parents=True, exist_ok=True)
 
     return AppConfig(reddit=reddit_cfg, probe=probe_cfg, supabase=supabase_cfg)
 
