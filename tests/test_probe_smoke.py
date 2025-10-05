@@ -5,12 +5,12 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from reddit_researcher.core.probe import main
+from reddit_researcher.core.orchestrator import main
 
 
 @patch("reddit_researcher.apis.reddit.adapter.RedditSourceAdapter.fetch_comments")
 @patch("reddit_researcher.apis.reddit.adapter.RedditSourceAdapter.iter_posts")
-@patch("reddit_researcher.core.probe.load_config")
+@patch("reddit_researcher.core.orchestrator.load_config")
 def test_probe_smoke(mock_load_cfg, mock_iter_hot, mock_fetch_comments, tmp_path) -> None:
     cfg = SimpleNamespace(
         reddit=SimpleNamespace(client_id="id", client_secret="sec", user_agent="ua"),

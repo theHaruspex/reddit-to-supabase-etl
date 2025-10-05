@@ -9,7 +9,7 @@ dependencies = ["praw", "python-dotenv", "tqdm", "supabase", "pyyaml"]
 
 [project.scripts]
 reddit-researcher = "reddit_researcher.cli.cli:main"
-reddit-probe = "reddit_researcher.core.probe:main"
+reddit-probe = "reddit_researcher.core.orchestrator:main"
 
 [tool.pytest.ini_options]
 addopts = "-q"

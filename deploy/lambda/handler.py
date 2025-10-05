@@ -4,7 +4,7 @@ import json
 import os
 from typing import Any, Dict
 
-from reddit_researcher.core.probe import main as probe_main
+from reddit_researcher.core.orchestrator import main as probe_main
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
