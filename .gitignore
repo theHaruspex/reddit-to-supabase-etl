@@ -14,3 +14,6 @@ htmlcov/
 .env
 reports/
 !reports/.gitkeep
+data/
+!data/.gitkeep
+project-reporter/file_contents_report.txt
