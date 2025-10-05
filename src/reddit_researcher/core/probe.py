@@ -7,14 +7,12 @@ import random
 import sys
 import time
 from collections.abc import Iterator
-from pathlib import Path
 
 from reddit_researcher.apis.reddit.adapter import RedditSourceAdapter
 from reddit_researcher.apis.supabase.adapter import SupabaseSinkAdapter
 from reddit_researcher.config.config import AppConfig, generate_run_id, load_config
 from reddit_researcher.core.ratelimit import RateLimiter, compute_backoff_seconds
 from reddit_researcher.core.telemetry import Stopwatch, TelemetryRecorder
-from reddit_researcher.io.io_streams import append_jsonl, append_jsonl_many
 from reddit_researcher.io.normalizers import normalize_comment, normalize_post
 
 
@@ -40,12 +38,7 @@ def main(argv: list[str] | None = None) -> int:
         cfg.probe.comment_replace_more_limit,
         bool(cfg.supabase.enabled),
     )
-    out_posts = Path(cfg.probe.out_dir) / f"posts_{run_id}.jsonl"
-    out_comments = Path(cfg.probe.out_dir) / f"comments_{run_id}.jsonl"
-    out_metrics = Path(cfg.probe.out_dir) / f"run_metrics_{run_id}.json"
-    report_dir = Path(cfg.probe.reports_dir)
-    report_dir.mkdir(parents=True, exist_ok=True)
-    report_path = report_dir / f"run_{run_id}.md"
+    # Local file outputs disabled: no JSONL or report writes
 
     limiter = RateLimiter(cfg.probe.qpm_cap, burst_tokens=1)
     telem = TelemetryRecorder()
@@ -76,7 +69,6 @@ def main(argv: list[str] | None = None) -> int:
         limiter.acquire()
         posts.append(s)
         norm = normalize_post(s)
-        append_jsonl(out_posts, norm)
         posts_batch.append(norm)
         post_id = norm.get("id")
         if isinstance(post_id, str):
@@ -121,10 +113,8 @@ def main(argv: list[str] | None = None) -> int:
                         comments_batch.append(nc)
                         yield nc
 
-                append_jsonl_many(
-                    out_comments,
-                    _gen(),
-                )
+                # Local comment JSONL writes disabled
+                _ = list(_gen())
                 break
             except Exception:
                 attempts += 1
@@ -135,11 +125,7 @@ def main(argv: list[str] | None = None) -> int:
 
     ended_at = time.time()
 
-    comments_total = 0
-    if Path(out_comments).exists():
-        with Path(out_comments).open("r", encoding="utf-8") as f:
-            for _ in f:
-                comments_total += 1
+    comments_total = len(comments_batch)
 
     # Compute simple per-post stats for expanded posts
     def _percentile(sorted_vals: list[int], pct: float) -> int:
@@ -181,33 +167,7 @@ def main(argv: list[str] | None = None) -> int:
         "comments_per_expanded_post": per_post_stats,
     }
 
-    Path(out_metrics).write_text(json.dumps(metrics, indent=2), encoding="utf-8")
-    report_lines = [
-        f"# Reddit Probe — r/{cfg.probe.subreddit} ({cfg.probe.listing}) — {run_id}",
-        "",
-        "**Config**",
-        (
-            f"- posts: {cfg.probe.post_limit}, comment_sample: {cfg.probe.comment_sample}, "
-            f"replace_more_limit: {cfg.probe.comment_replace_more_limit}"
-        ),
-        f"- qpm_cap: {cfg.probe.qpm_cap}, raw_json: {cfg.probe.raw_json}",
-        "",
-        "**Timing**",
-        f"- started: {started_at:.0f}, ended: {ended_at:.0f}, elapsed: {elapsed_sec:.2f}s",
-        "",
-        "## Requests & Rate Limits",
-        f"- ratelimit windows observed: {ratelimit_windows}",
-        "",
-        "## Data Volume",
-        f"- posts fetched: {len(posts)}",
-        f"- comments fetched (sample {cfg.probe.comment_sample}): {comments_total}",
-        (
-            "- comments per expanded post: "
-            f"min {per_post_stats['min']}, p50 {per_post_stats['p50']}, "
-            f"p95 {per_post_stats['p95']}, max {per_post_stats['max']}"
-        ),
-    ]
-    report_path.write_text("\n".join(report_lines), encoding="utf-8")
+    # Local metrics/report writes disabled
 
     # Optional Supabase sink
     if cfg.supabase.enabled and cfg.supabase.url and cfg.supabase.key:
