@@ -197,9 +197,11 @@ def main(argv: list[str] | None = None) -> int:
             sink.upsert_comments(comments_batch)
             logger.info("upserted %d comments", len(comments_batch))
         if post_ids_for_run:
+            logger.info("linking runs_posts count=%d", len(post_ids_for_run))
             sink.link_run_posts(run_id, post_ids_for_run)
             logger.info("linked %d runs_posts", len(post_ids_for_run))
         if comment_ids_for_run:
+            logger.info("linking runs_comments count=%d", len(comment_ids_for_run))
             sink.link_run_comments(run_id, comment_ids_for_run)
             logger.info("linked %d runs_comments", len(comment_ids_for_run))
 

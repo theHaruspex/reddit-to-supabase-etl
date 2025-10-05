@@ -12,6 +12,8 @@ class SupabaseHandle:
 
 
 def make_supabase(url: str, key: str, schema: str = "public") -> SupabaseHandle:
+    # Normalize to avoid double slashes in REST paths
+    url = url.rstrip("/")
     client: Client = create_client(url, key)
     return SupabaseHandle(client=client, schema=schema)
 

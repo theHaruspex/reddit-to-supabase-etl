@@ -28,17 +28,26 @@ def upsert_comments(sb: SupabaseHandle, comments: Iterable[dict[str, Any]]) -> N
     upsert_rows(sb, "comments", comments, conflict="id")
 
 
-def link_run_posts(sb: SupabaseHandle, run_id: str, post_ids: Iterable[str]) -> None:
-    rows = [{"run_id": run_id, "post_id": pid} for pid in set(post_ids)]
-    if not rows:
-        return
-    sb.client.table("runs_posts").upsert(rows, on_conflict="run_id,post_id").execute()
+def _batched(iterable: Iterable[dict[str, Any]], batch_size: int) -> Iterable[list[dict[str, Any]]]:
+    batch: list[dict[str, Any]] = []
+    for item in iterable:
+        batch.append(item)
+        if len(batch) >= batch_size:
+            yield batch
+            batch = []
+    if batch:
+        yield batch
 
 
-def link_run_comments(sb: SupabaseHandle, run_id: str, comment_ids: Iterable[str]) -> None:
-    rows = [{"run_id": run_id, "comment_id": cid} for cid in set(comment_ids)]
-    if not rows:
-        return
-    sb.client.table("runs_comments").upsert(rows, on_conflict="run_id,comment_id").execute()
+def link_run_posts(sb: SupabaseHandle, run_id: str, post_ids: Iterable[str], *, batch_size: int = 1000) -> None:
+    rows_iter = ({"run_id": run_id, "post_id": pid} for pid in set(post_ids))
+    for chunk in _batched(rows_iter, batch_size):
+        sb.client.table("runs_posts").upsert(chunk, on_conflict="run_id,post_id").execute()
+
+
+def link_run_comments(sb: SupabaseHandle, run_id: str, comment_ids: Iterable[str], *, batch_size: int = 1000) -> None:
+    rows_iter = ({"run_id": run_id, "comment_id": cid} for cid in set(comment_ids))
+    for chunk in _batched(rows_iter, batch_size):
+        sb.client.table("runs_comments").upsert(chunk, on_conflict="run_id,comment_id").execute()
 
 
