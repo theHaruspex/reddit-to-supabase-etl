@@ -48,10 +48,15 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     posts = []
+    post_ids_for_run: list[str] = []
     for s in posts_iter:
         limiter.acquire()
         posts.append(s)
-        append_jsonl(out_posts, normalize_post(s))
+        norm = normalize_post(s)
+        append_jsonl(out_posts, norm)
+        post_id = norm.get("id")
+        if isinstance(post_id, str):
+            post_ids_for_run.append(post_id)
 
     # Choose K posts to expand comments (by num_comments desc)
     posts_sorted = sorted(posts, key=lambda x: getattr(x, "num_comments", 0), reverse=True)
@@ -60,6 +65,7 @@ def main(argv: list[str] | None = None) -> int:
     # Expand comments with basic retry/backoff
     rng = random.Random()
     comments_per_post: list[int] = []
+    comment_ids_for_run: list[str] = []
     for s in sample:
         attempts = 0
         while True:
@@ -75,9 +81,17 @@ def main(argv: list[str] | None = None) -> int:
                     elapsed_s=sw.elapsed,
                 )
                 comments_per_post.append(len(comments))
+                def _gen():
+                    for c in comments:
+                        nc = normalize_comment(c, link_id=getattr(s, "id", None))
+                        cid = nc.get("id")
+                        if isinstance(cid, str):
+                            comment_ids_for_run.append(cid)
+                        yield nc
+
                 append_jsonl_many(
                     out_comments,
-                    (normalize_comment(c, link_id=getattr(s, "id", None)) for c in comments),
+                    _gen(),
                 )
                 break
             except Exception:
@@ -182,7 +196,8 @@ def main(argv: list[str] | None = None) -> int:
             "comments_total": comments_total,
         }
         sink.upsert_run(run_row)
-        # For simplicity, only upsert run here now; posts/comments can be streamed in later.
+        sink.link_run_posts(run_id, post_ids_for_run)
+        sink.link_run_comments(run_id, comment_ids_for_run)
 
     print(json.dumps({"run_id": run_id, "posts": len(posts), "comments": comments_total}))
     return 0

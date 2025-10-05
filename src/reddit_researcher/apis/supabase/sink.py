@@ -28,3 +28,17 @@ def upsert_comments(sb: SupabaseHandle, comments: Iterable[dict[str, Any]]) -> N
     upsert_rows(sb, "comments", comments, conflict="id")
 
 
+def link_run_posts(sb: SupabaseHandle, run_id: str, post_ids: Iterable[str]) -> None:
+    rows = [{"run_id": run_id, "post_id": pid} for pid in set(post_ids)]
+    if not rows:
+        return
+    sb.client.table("runs_posts").upsert(rows, on_conflict="run_id,post_id").execute()
+
+
+def link_run_comments(sb: SupabaseHandle, run_id: str, comment_ids: Iterable[str]) -> None:
+    rows = [{"run_id": run_id, "comment_id": cid} for cid in set(comment_ids)]
+    if not rows:
+        return
+    sb.client.table("runs_comments").upsert(rows, on_conflict="run_id,comment_id").execute()
+
+

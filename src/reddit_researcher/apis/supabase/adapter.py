@@ -5,6 +5,8 @@ from typing import Any
 
 from reddit_researcher.apis.supabase.client import make_supabase
 from reddit_researcher.apis.supabase.sink import (
+    link_run_comments,
+    link_run_posts,
     upsert_comments,
     upsert_posts,
     upsert_run,
@@ -27,11 +29,9 @@ class SupabaseSinkAdapter:
         upsert_comments(self._sb, rows)
 
     def link_run_posts(self, run_id: str, post_ids: Iterable[str]) -> None:
-        # Optional future: implement runs_posts upsert
-        pass
+        link_run_posts(self._sb, run_id, post_ids)
 
     def link_run_comments(self, run_id: str, comment_ids: Iterable[str]) -> None:
-        # Optional future: implement runs_comments upsert
-        pass
+        link_run_comments(self._sb, run_id, comment_ids)
 
 
