@@ -8,9 +8,9 @@ probe:
   subreddit: "all"
   listing: "hot"
   time_filter: "day"
-  post_limit: 5
-  comment_sample: 0
-  comment_replace_more_limit: 1
+  post_limit: 50
+  comment_sample: 10
+  comment_replace_more_limit: 5
   qpm_cap: 90
   max_runtime_sec: 600
   raw_json: 1

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
+import logging
+import os
 import random
 import sys
 import time
+from collections.abc import Iterator
 from pathlib import Path
 
 from reddit_researcher.apis.reddit.adapter import RedditSourceAdapter
@@ -16,6 +19,8 @@ from reddit_researcher.io.normalizers import normalize_comment, normalize_post
 
 
 def main(argv: list[str] | None = None) -> int:
+    _configure_logging()
+    logger = logging.getLogger("reddit_researcher.probe")
     _ = argv or sys.argv[1:]
 
     try:
@@ -25,6 +30,16 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     run_id = generate_run_id()
+    logger.info(
+        "starting run %s subreddit=%s listing=%s N=%s K=%s repl_more=%s supabase=%s",
+        run_id,
+        cfg.probe.subreddit,
+        cfg.probe.listing,
+        cfg.probe.post_limit,
+        cfg.probe.comment_sample,
+        cfg.probe.comment_replace_more_limit,
+        bool(cfg.supabase.enabled),
+    )
     out_posts = Path(cfg.probe.out_dir) / f"posts_{run_id}.jsonl"
     out_comments = Path(cfg.probe.out_dir) / f"comments_{run_id}.jsonl"
     out_metrics = Path(cfg.probe.out_dir) / f"run_metrics_{run_id}.json"
@@ -38,8 +53,15 @@ def main(argv: list[str] | None = None) -> int:
 
     # Build adapters
     source = RedditSourceAdapter(cfg)
+    logger.info("reddit source ready")
 
     # Fetch posts
+    logger.info(
+        "fetching posts listing=%s subreddit=%s limit=%s",
+        cfg.probe.listing,
+        cfg.probe.subreddit,
+        cfg.probe.post_limit,
+    )
     posts_iter = source.iter_posts(
         subreddit=cfg.probe.subreddit,
         listing=cfg.probe.listing,
@@ -63,6 +85,7 @@ def main(argv: list[str] | None = None) -> int:
     # Choose K posts to expand comments (by num_comments desc)
     posts_sorted = sorted(posts, key=lambda x: getattr(x, "num_comments", 0), reverse=True)
     sample = posts_sorted[: cfg.probe.comment_sample]
+    logger.info("fetched %d posts; sampling %d for comments", len(posts), len(sample))
 
     # Expand comments with basic retry/backoff
     rng = random.Random()
@@ -73,6 +96,11 @@ def main(argv: list[str] | None = None) -> int:
         attempts = 0
         while True:
             try:
+                logger.debug(
+                    "expand comments submission_id=%s replace_more=%s",
+                    getattr(s, "id", None),
+                    cfg.probe.comment_replace_more_limit,
+                )
                 with Stopwatch() as sw:
                     comments = source.fetch_comments(
                         submission_id=getattr(s, "id", ""),
@@ -200,17 +228,40 @@ def main(argv: list[str] | None = None) -> int:
             "comments_total": comments_total,
         }
         sink.upsert_run(run_row)
+        logger.info("upserted run %s", run_id)
         # Upsert rows (idempotent)
-        sink.upsert_posts(posts_batch)
-        sink.upsert_comments(comments_batch)
-        sink.link_run_posts(run_id, post_ids_for_run)
-        sink.link_run_comments(run_id, comment_ids_for_run)
+        if posts_batch:
+            sink.upsert_posts(posts_batch)
+            logger.info("upserted %d posts", len(posts_batch))
+        if comments_batch:
+            sink.upsert_comments(comments_batch)
+            logger.info("upserted %d comments", len(comments_batch))
+        if post_ids_for_run:
+            sink.link_run_posts(run_id, post_ids_for_run)
+            logger.info("linked %d runs_posts", len(post_ids_for_run))
+        if comment_ids_for_run:
+            sink.link_run_comments(run_id, comment_ids_for_run)
+            logger.info("linked %d runs_comments", len(comment_ids_for_run))
 
+    logger.info("finished run %s elapsed=%.2fs", run_id, elapsed_sec)
     print(json.dumps({"run_id": run_id, "posts": len(posts), "comments": comments_total}))
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+def _configure_logging() -> None:
+    level_name = os.getenv("LOG_LEVEL", "INFO").upper()
+    level = getattr(logging, level_name, logging.INFO)
+    log_format = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+    if os.getenv("LOG_JSON") == "1":
+        # Minimal JSON formatter
+        log_format = (
+            '{"ts":"%(asctime)s","level":"%(levelname)s",'
+            '"logger":"%(name)s","msg":"%(message)s"}'
+        )
+    logging.basicConfig(level=level, format=log_format)
+
 
 
