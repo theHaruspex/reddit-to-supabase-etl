@@ -2,14 +2,14 @@
 reddit:
   client_id: 
   client_secret: 
-  user_agent: ExpressWrangler4615:reddit-probe:v0.1 (by u/ExpressWrangler4615)
+  user_agent: reddit-probe:v0.1
 
 probe:
   subreddit: "all"
   listing: "hot"
   time_filter: "day"
   post_limit: 10
-  comment_sample: 2
+  comment_sample: 5
   comment_replace_more_limit: 5
   qpm_cap: 90
   max_runtime_sec: 600
