@@ -8,16 +8,11 @@ ZIP_PATH="$BUILD_DIR/package.zip"
 echo "[build] cleaning $BUILD_DIR"
 rm -rf "$BUILD_DIR" && mkdir -p "$BUILD_DIR"
 
-echo "[build] installing python deps into build/python"
-python3 -m venv "$BUILD_DIR/.venv"
-source "$BUILD_DIR/.venv/bin/activate"
-python -m pip install --upgrade pip >/dev/null
+echo "[build] preparing requirements.txt"
 if [[ -f "$ROOT_DIR/requirements.txt" ]]; then
-  python -m pip install -r "$ROOT_DIR/requirements.txt" -t "$BUILD_DIR/python"
+  cp "$ROOT_DIR/requirements.txt" "$BUILD_DIR/requirements.txt"
 else
-  echo "[build] requirements.txt not found; using pyproject deps fallback"
   python - <<'PY'
-import json, subprocess
 from pathlib import Path
 py = Path('pyproject.toml').read_text()
 start = py.find('dependencies = [')
@@ -29,10 +24,18 @@ if start != -1 and end != -1:
         line=line.strip().strip('",')
         if line and not line.startswith('dependencies') and line not in ('[', ']'):
             deps.append(line)
-if deps:
-    subprocess.check_call(["python","-m","pip","install","-t","build/python",*deps])
+out = Path('build/requirements.txt')
+out.parent.mkdir(parents=True, exist_ok=True)
+out.write_text('\n'.join(deps) + '\n')
+print('[build] wrote', out)
 PY
 fi
+
+echo "[build] installing python deps into build/python"
+python3 -m venv "$BUILD_DIR/.venv"
+source "$BUILD_DIR/.venv/bin/activate"
+python -m pip install --upgrade pip >/dev/null
+python -m pip install -r "$BUILD_DIR/requirements.txt" -t "$BUILD_DIR/python"
 
 echo "[build] copying project package"
 mkdir -p "$BUILD_DIR/reddit_researcher"
