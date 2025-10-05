@@ -48,12 +48,14 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     posts = []
+    posts_batch: list[dict[str, object]] = []
     post_ids_for_run: list[str] = []
     for s in posts_iter:
         limiter.acquire()
         posts.append(s)
         norm = normalize_post(s)
         append_jsonl(out_posts, norm)
+        posts_batch.append(norm)
         post_id = norm.get("id")
         if isinstance(post_id, str):
             post_ids_for_run.append(post_id)
@@ -66,6 +68,7 @@ def main(argv: list[str] | None = None) -> int:
     rng = random.Random()
     comments_per_post: list[int] = []
     comment_ids_for_run: list[str] = []
+    comments_batch: list[dict[str, object]] = []
     for s in sample:
         attempts = 0
         while True:
@@ -81,12 +84,13 @@ def main(argv: list[str] | None = None) -> int:
                     elapsed_s=sw.elapsed,
                 )
                 comments_per_post.append(len(comments))
-                def _gen():
+                def _gen() -> Iterator[dict[str, object]]:
                     for c in comments:
                         nc = normalize_comment(c, link_id=getattr(s, "id", None))
                         cid = nc.get("id")
                         if isinstance(cid, str):
                             comment_ids_for_run.append(cid)
+                        comments_batch.append(nc)
                         yield nc
 
                 append_jsonl_many(
@@ -196,6 +200,9 @@ def main(argv: list[str] | None = None) -> int:
             "comments_total": comments_total,
         }
         sink.upsert_run(run_row)
+        # Upsert rows (idempotent)
+        sink.upsert_posts(posts_batch)
+        sink.upsert_comments(comments_batch)
         sink.link_run_posts(run_id, post_ids_for_run)
         sink.link_run_comments(run_id, comment_ids_for_run)
 
