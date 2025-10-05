@@ -120,9 +120,10 @@ def load_config(config_path: str | Path = "config.yaml") -> AppConfig:
         schema=str(supabase_raw.get("schema", "public")),
     )
 
-    # Ensure output dirs exist
-    Path(probe_cfg.out_dir).mkdir(parents=True, exist_ok=True)
-    Path(probe_cfg.reports_dir).mkdir(parents=True, exist_ok=True)
+    # Optionally create local output dirs (disabled by default for AWS Lambda)
+    if os.getenv("ENABLE_LOCAL_OUTPUTS") == "1":
+        Path(probe_cfg.out_dir).mkdir(parents=True, exist_ok=True)
+        Path(probe_cfg.reports_dir).mkdir(parents=True, exist_ok=True)
 
     return AppConfig(reddit=reddit_cfg, probe=probe_cfg, supabase=supabase_cfg)
 
