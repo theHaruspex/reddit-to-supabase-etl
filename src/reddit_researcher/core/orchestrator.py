@@ -221,7 +221,15 @@ def _configure_logging() -> None:
             '{"ts":"%(asctime)s","level":"%(levelname)s",'
             '"logger":"%(name)s","msg":"%(message)s"}'
         )
-    logging.basicConfig(level=level, format=log_format)
+    # In AWS Lambda, logging may be pre-configured; force ensures our config applies
+    try:
+        logging.basicConfig(level=level, format=log_format, force=True)
+    except TypeError:
+        # Fallback for older environments without force param
+        root = logging.getLogger()
+        for h in list(root.handlers):
+            root.removeHandler(h)
+        logging.basicConfig(level=level, format=log_format)
 
 
 
