@@ -34,6 +34,31 @@ This pipeline no longer writes local files; results are upserted idempotently to
 ruff check . && mypy src && pytest -q
 ```
 
+## CI/CD (GitHub Actions) Secrets
+- Set repository Secrets (Settings → Secrets and variables → Actions):
+  - `AWS_ACCESS_KEY_ID`
+  - `AWS_SECRET_ACCESS_KEY`
+  - Optional: `AWS_REGION` (e.g. `us-east-2`) if not constant in workflow
+  - The IAM user must have permissions to update your Lambda function (see policy example below)
+
+Example minimal IAM policy for one function (adjust Region/Account/FunctionName):
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:UpdateFunctionCode",
+        "lambda:GetFunction",
+        "lambda:GetFunctionConfiguration"
+      ],
+      "Resource": "arn:aws:lambda:us-east-2:123456789012:function:your-function-name"
+    }
+  ]
+}
+```
+
 ## Notes
 - Rate limiting enforced (token-bucket) with backoff helpers.
 - Telemetry captures timings and parses X-Ratelimit-* headers when available.

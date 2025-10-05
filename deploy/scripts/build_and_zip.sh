@@ -124,6 +124,8 @@ else
 fi
 
 echo "[build] done: $ZIP_PATH"
-echo "Next: aws lambda update-function-code --function-name <name> --zip-file fileb://$ZIP_PATH"
+FUNCTION_NAME=${FUNCTION_NAME:-"reddit-to-supabase-pipeline"}
+AWS_REGION=${AWS_REGION:-"us-east-2"}
+echo "Next: aws lambda update-function-code --function-name $FUNCTION_NAME --zip-file fileb://$ZIP_PATH --region $AWS_REGION"
 
 

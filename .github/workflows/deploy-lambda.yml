@@ -1,0 +1,43 @@
+name: Deploy Lambda
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+env:
+  PY_VERSION: '3.12'
+  USE_DOCKER: '1'
+  LAMBDA_ARCH: x86_64
+  FUNCTION_NAME: ${{ vars.FUNCTION_NAME || 'reddit-to-supabase-pipeline' }}
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-2' }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker (preinstalled on Ubuntu)
+        run: docker --version
+
+      - name: Build Lambda zip
+        run: bash deploy/scripts/build_and_zip.sh
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy function code
+        run: |
+          aws lambda update-function-code \
+            --function-name "$FUNCTION_NAME" \
+            --zip-file fileb://build/package.zip
+
+
