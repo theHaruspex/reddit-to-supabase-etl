@@ -1,6 +1,16 @@
 # CLI
 
-Purpose: entrypoints.
+Command-line entrypoints for the project.
 
-- cli.py: hello example
-- reddit-probe: runs probe
+## Entry points
+- `reddit-probe`: orchestrates a probe run using `core/probe.py`.
+- `reddit-researcher`: hello example.
+
+## Usage
+```bash
+source .venv/bin/activate
+reddit-probe
+```
+
+## Flags (future)
+- Potential overrides for subreddit, N/K, replace-more limit, and dry-run.
