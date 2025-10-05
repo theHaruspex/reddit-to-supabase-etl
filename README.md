@@ -1,4 +1,4 @@
-# Reddit Researcher
+# Reddit → Supabase ETL
 
 CLI tools to probe Reddit listings with PRAW, stream results to JSONL, and summarize request costs.
 
