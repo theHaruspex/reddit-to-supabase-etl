@@ -31,11 +31,11 @@ print('[build] wrote', out)
 PY
 fi
 
-echo "[build] installing python deps into build/python"
+echo "[build] installing python deps into build/ (zip root)"
 python3 -m venv "$BUILD_DIR/.venv"
 source "$BUILD_DIR/.venv/bin/activate"
 python -m pip install --upgrade pip >/dev/null
-python -m pip install -r "$BUILD_DIR/requirements.txt" -t "$BUILD_DIR/python"
+python -m pip install -r "$BUILD_DIR/requirements.txt" -t "$BUILD_DIR"
 
 echo "[build] copying project package"
 mkdir -p "$BUILD_DIR/reddit_researcher"
